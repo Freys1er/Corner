@@ -1,0 +1,836 @@
+/* Basic Reset & iOS Font */
+:root {
+    --ios-blue: #007AFF;
+    --ios-light-gray: #f2f2f7;
+    --ios-mid-gray: #c7c7cc;
+    --ios-dark-gray: #8e8e93;
+    --ios-red: #FF3B30;
+    --ios-green: #34C759;
+    --background-color: #ffffff;
+    /* or var(--ios-light-gray) for grouped style */
+    --separator-color: #e0e0e0;
+    /* Lighter than mid-gray */
+    --header-height: 50px;
+    --tab-bar-height: 44px;
+}
+
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+        Arial, sans-serif;
+    background-color: var(--background-color);
+    color: #000;
+    overscroll-behavior-y: contain;
+    /* Prevent pull-to-refresh */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+#app-container {
+    max-width: 600px;
+    /* Simulate phone width on desktop */
+    margin: 0 auto;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--background-color);
+    position: relative;
+    /* Needed for absolute positioning of elements */
+    overflow: hidden;
+    /* Prevents body scroll */
+}
+
+/* --- iOS Style Elements --- */
+
+button {
+    border: none;
+    background: none;
+    color: var(--ios-blue);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 8px 12px;
+}
+
+button:disabled {
+    color: var(--ios-mid-gray);
+    cursor: default;
+}
+
+.ios-button-primary {
+    background-color: var(--ios-blue);
+    color: white;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: 500;
+    text-align: center;
+}
+
+.ios-button-primary:active {
+    background-color: #0056b3;
+}
+
+.ios-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    width: 90%;
+    /* Often lists have white background */
+}
+
+.ios-list-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    min-height: 44px;
+    border-bottom: 1px solid var(--ios-dark-grey);
+    /* Standard iOS touch target height */
+    position: relative;
+    width: 90%;
+    /* For absolute positioning of accessories */
+}
+.ios-list-item:last-child {
+    border-bottom: none;
+}
+
+.ios-list-item img.pfp {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 15px;
+    object-fit: cover;
+}
+
+.ios-list-item .content {
+    flex-grow: 1;
+}
+
+.ios-list-item .title {
+    font-size: 17px;
+}
+
+.ios-list-item .subtitle {
+    font-size: 14px;
+    color: var(--ios-dark-gray);
+}
+
+.ios-list-item .accessory {
+    margin-left: 10px;
+    color: var(--ios-mid-gray);
+    /* e.g., for disclosure indicator > */
+}
+
+.ios-list-item .accessory.disclosure::after {
+    content: '>';
+    font-size: 20px;
+    font-weight: bold;
+    color: var(--ios-mid-gray);
+}
+
+.ios-header {
+    height: var(--header-height);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Center title by default */
+    padding: 0 15px;
+    background-color: var(--ios-light-gray);
+    /* Or white depending on style */
+    border-bottom: 1px solid var(--separator-color);
+    position: relative;
+    /* For absolute positioning of left/right buttons */
+    flex-shrink: 0;
+    /* Prevent header from shrinking */
+}
+
+.ios-header .title {
+    font-size: 17px;
+    font-weight: 600;
+}
+
+.ios-header .left-action,
+.ios-header .right-action {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.ios-header .left-action {
+    left: 15px;
+}
+
+.ios-header .right-action {
+    right: 15px;
+}
+
+.ios-header .left-action button,
+.ios-header .right-action button {
+    font-size: 17px;
+    padding: 5px;
+    /* Smaller padding for header buttons */
+}
+
+.ios-tab-bar {
+    display: flex;
+    height: var(--tab-bar-height);
+    border-bottom: 1px solid var(--separator-color);
+    background-color: white;
+    flex-shrink: 0;
+}
+
+.ios-tab-bar .tab-item {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: var(--ios-dark-gray);
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.ios-tab-bar .tab-item.active {
+    color: var(--ios-blue);
+    border-bottom-color: var(--ios-blue);
+    font-weight: 500;
+}
+
+.content-area {
+    flex-grow: 1;
+    /* Take remaining space */
+    overflow-y: auto;
+    /* Enable scrolling for content */
+    -webkit-overflow-scrolling: touch;
+    /* Smooth scrolling on iOS */
+    background-color: var(--ios-light-gray);
+    /* Typical grouped background */
+    padding: 10px 0;
+    /* Padding top/bottom for spacing */
+}
+
+/* Loading Spinner */
+.loading-spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    /* Add a real spinner animation later */
+    font-size: 18px;
+    color: var(--ios-dark-gray);
+}
+
+/* --- Login / Group List Specific --- */
+.login-container,
+.group-list-container {
+    padding: 30px 20px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-grow: 1;
+}
+
+.login-container h1,
+.group-list-container h1 {
+    margin-bottom: 30px;
+}
+
+.google-login-button {
+    /* Style like Google's button */
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 20px;
+    border: 1px solid #dadce0;
+    border-radius: 4px;
+    background-color: white;
+    color: #3c4043;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-bottom: 20px;
+}
+
+.google-login-button img {
+    width: 18px;
+    height: 18px;
+    margin-right: 10px;
+}
+
+.join-group-section {
+    margin-top: 40px;
+    width: 100%;
+    max-width: 300px;
+}
+
+.join-group-section input[type="text"] {
+    width: calc(100% - 22px);
+    /* Full width minus padding/border */
+    padding: 10px;
+    border: 1px solid var(--ios-mid-gray);
+    border-radius: 8px;
+    font-size: 16px;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.group-actions button {
+    margin: 0 5px;
+}
+
+.group-code-display {
+    background-color: var(--ios-light-gray);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-family: monospace;
+    margin: 5px 0 10px 0;
+    display: inline-block;
+    border: 1px solid var(--separator-color);
+}
+
+/* --- Group View Specific --- */
+.main-group-view {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* --- Chat Specific --- */
+.chat-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    /* Fill content-area */
+    padding: 0 !important;
+    /* Override content-area padding */
+    background-color: white;
+    /* Chat usually white */
+}
+
+.message-list {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.message-item {
+    display: flex;
+    margin-bottom: 10px;
+    max-width: 80%;
+}
+
+.message-item .pfp {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+
+.message-content {
+    background-color: var(--ios-light-gray);
+    padding: 8px 12px;
+    border-radius: 18px;
+    word-wrap: break-word;
+    /* Prevent long words overflowing */
+}
+
+.message-meta {
+    font-size: 12px;
+    color: var(--ios-dark-gray);
+    margin-bottom: 3px;
+    display: block;
+    /* Ensures it's on its own line above message */
+}
+
+.message-text {
+    font-size: 16px;
+}
+
+.message-item.sent {
+    align-self: flex-end;
+    margin-left: auto;
+    /* Push to right */
+}
+
+.message-item.sent .message-content {
+    background-color: var(--ios-blue);
+    color: white;
+}
+
+.message-item.sent .pfp {
+    display: none;
+    /* Hide own PFP */
+}
+
+.message-item.received {
+    align-self: flex-start;
+}
+
+.message-item.received .message-content {
+    background-color: #E5E5EA;
+    /* iOS received bubble color */
+    color: black;
+}
+
+.message-item.system {
+    align-self: center;
+    background-color: transparent;
+    padding: 5px 0;
+    max-width: 100%;
+    margin: 10px 0;
+}
+
+.message-item.system .message-content {
+    background-color: #e0e0e0;
+    /* Grey background for system message */
+    color: #666;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.message-item.system .pfp {
+    display: none;
+}
+
+.message-item.system .message-meta {
+    display: none;
+}
+
+
+.chat-input-area {
+    display: flex;
+    padding: 8px 10px;
+    border-top: 1px solid var(--separator-color);
+    background-color: var(--ios-light-gray);
+    align-items: center;
+    /* Align items vertically */
+    flex-shrink: 0;
+}
+
+.chat-input-area textarea {
+    flex-grow: 1;
+    border: 1px solid var(--ios-mid-gray);
+    border-radius: 18px;
+    padding: 8px 12px;
+    font-size: 16px;
+    resize: none;
+    /* Disable resizing */
+    min-height: 20px;
+    /* Start small */
+    max-height: 100px;
+    /* Limit growth */
+    overflow-y: auto;
+    /* Allow scrolling if text exceeds max-height */
+    margin-right: 8px;
+    box-sizing: border-box;
+    /* Include padding and border in the element's total width and height */
+}
+
+.chat-input-area button.send-button {
+    background: none;
+    border: none;
+    padding: 5px;
+    cursor: pointer;
+}
+
+.chat-input-area button.send-button img {
+    width: 28px;
+    height: 28px;
+    display: block;
+}
+
+
+/* --- Voting Specific --- */
+.voting-content {
+    padding: 10px;
+    /* Spacing around list */
+    position: relative;
+    /* For FAB */
+    min-height: calc(100% - 20px);
+    /* Ensure it fills space for FAB */
+}
+
+.poll-list {
+    background-color: white;
+    border-radius: 10px;
+    overflow: hidden;
+    /* Clip corners */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 15px;
+}
+
+.poll-item {
+    padding: 15px;
+    border-bottom: 1px solid var(--separator-color);
+}
+
+.poll-item:last-child {
+    border-bottom: none;
+}
+
+.poll-item h3 {
+    margin: 0 0 15px 0;
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.poll-options button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    margin-bottom: 8px;
+    padding: 10px 15px;
+    border: 1px solid var(--ios-blue);
+    border-radius: 8px;
+    color: var(--ios-blue);
+    background-color: white;
+    font-size: 16px;
+    position: relative;
+    /* For checkmark */
+}
+
+.poll-options button.selected {
+    background-color: var(--ios-blue);
+    color: white;
+    font-weight: 500;
+}
+
+.poll-options button.selected::after {
+    content: '✔';
+    /* Checkmark */
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+}
+
+.poll-options button.poll-option-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    margin-bottom: 8px;
+    padding: 10px 15px; 
+    border: 1px solid var(--ios-mid-gray); 
+    border-radius: 8px;
+    color: #000;
+    font-size: 16px;
+    position: relative; 
+    overflow: hidden; 
+    cursor: pointer;
+    transition: border-color 0.2s ease; 
+
+.poll-options button.poll-option-btn:hover {
+    border-color: var(--ios-blue);
+}
+
+.poll-options button.poll-option-btn.selected {
+    border-color: var(--ios-blue); 
+    font-weight: 500;
+    background-color: var(--ios-blue);
+    color: white;
+}
+
+.poll-option-text-overlay {
+    position: relative;
+    z-index: 2; 
+    display: block; 
+    color: #000; 
+}
+
+.checkmark-overlay {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    color: var(--ios-blue); 
+    z-index: 3;
+}
+
+.poll-options button.poll-option-btn.selected .poll-option-text-overlay {
+    color: var(--ios-blue);
+}
+
+.poll-options button:last-child {
+    margin-bottom: 0;
+}
+
+.poll-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+}
+
+.poll-actions button.info-button {
+    padding: 5px;
+}
+
+.poll-actions button.info-button img {
+    width: 5px;
+    height: 5px;
+}
+
+.fab-add-poll {
+    position: fixed;
+    /* Relative to viewport or container */
+    bottom: 20px;
+    right: 20px;
+    /* Adjust right based on #app-container margin: calc(50% - 300px + 20px); if max-width is set */
+    background-color: var(--ios-blue);
+    color: white;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    font-weight: bold;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    border: none;
+    cursor: pointer;
+    z-index: 10;
+    /* Ensure it's above other content */
+}
+
+.fab-add-poll img {
+    width: 24px;
+    height: 24px;
+}
+
+/* --- Activities Specific --- */
+.activities-content {
+    padding: 10px;
+}
+
+.activity-list {
+    background-color: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.activity-item {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid var(--separator-color);
+    cursor: pointer;
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-item .title {
+    flex-grow: 1;
+    font-size: 17px;
+}
+
+/* --- Activity Detail View (Modal or Inline) --- */
+.activity-detail-view {
+    padding: 15px;
+    background-color: white;
+    /* Or light gray */
+    border-top: 1px solid var(--separator-color);
+    /* If shown inline */
+    margin-top: -1px;
+    /* Overlap border */
+}
+
+.activity-detail-view h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.detail-section {
+    margin-bottom: 20px;
+}
+
+.detail-section h4 {
+    margin: 0 0 8px 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ios-dark-gray);
+    text-transform: uppercase;
+}
+
+.detail-section p,
+.detail-section input,
+.detail-section textarea {
+    font-size: 16px;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.editable-field {
+    padding: 8px;
+    border: 1px dashed var(--ios-mid-gray);
+    border-radius: 4px;
+    cursor: pointer;
+    min-height: 20px;
+}
+
+.editable-field:hover {
+    border-color: var(--ios-blue);
+}
+
+.editing {
+    border: 1px solid var(--ios-blue);
+    cursor: text;
+}
+
+.editing textarea,
+.editing input {
+    width: 100%;
+    border: none;
+    outline: none;
+    padding: 0;
+    font: inherit;
+    resize: vertical;
+    /* Allow textarea resize */
+}
+
+/* Teams Section */
+.teams-section .controls {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.teams-section .controls button {
+    border: 1px solid var(--ios-mid-gray);
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    line-height: 28px;
+    /* Center text vertically */
+    text-align: center;
+    font-size: 20px;
+    font-weight: bold;
+    padding: 0;
+    margin-left: 10px;
+}
+
+.teams-circle-container {
+    width: 250px;
+    height: 250px;
+    border-radius: 50%;
+    border: 2px solid var(--ios-mid-gray);
+    position: relative;
+    margin: 20px auto;
+    overflow: hidden;
+    /* Important for clip-path or masks */
+}
+
+/* Basic Team Segment Styling (Hardcoded for up to 5 - needs JS adjustment) */
+.team-segment {
+    position: absolute;
+    width: 50%;
+    height: 50%;
+    /* background-color: rgba(0, 122, 255, 0.1); Placeholder */
+    /* border: 1px solid var(--ios-blue); Placeholder */
+    display: flex;
+    flex-direction: column;
+    /* Stack title and members */
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    box-sizing: border-box;
+    transform-origin: 100% 100%;
+    /* For rotation */
+    text-align: center;
+}
+
+.team-segment h5 {
+    /* Team Name */
+    margin: 0 0 5px 0;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.team-members {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+}
+
+.team-member-pfp {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid white;
+    /* Outline */
+    cursor: grab;
+    /* Indicate draggable */
+}
+
+.team-member-pfp:active {
+    cursor: grabbing;
+}
+
+/* TODO: Add complex CSS/SVG/JS for actual circular segments and drag/drop targets */
+/* This requires more advanced techniques like clip-path, SVG paths, or canvas */
+
+
+/* --- Utility --- */
+.hidden {
+    display: none !important;
+}
+
+/* --- Modals (Basic Structure) --- */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+.modal-content {
+    background-color: var(--ios-light-gray);
+    padding: 20px;
+    border-radius: 14px;
+    width: 85%;
+    max-width: 400px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.modal-content h2 {
+    margin-top: 0;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: space-around;
+    /* Or flex-end */
+    margin-top: 20px;
+}
+
+.modal-actions button {
+    font-weight: 500;
+}
+
+/* Add input styles within modal as needed */
