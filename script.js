@@ -245,3 +245,33 @@ function hideModal() {
         previouslyFocusedElement = null;
     }
 }
+
+function deepCopy(obj) {
+    // Primitive types (null and undefined handled correctly)
+    if (typeof obj !== 'object' || obj === null) {
+      return obj;
+    }
+  
+    // Array
+    if (Array.isArray(obj)) {
+      const copy = [];
+      for (let i = 0; i < obj.length; i++) {
+        copy[i] = deepCopy(obj[i]);
+      }
+      return copy;
+    }
+  
+    // Object
+    if (typeof obj === 'object') {
+      const copy = {};
+      for (const key in obj) {
+        if (obj.hasOwnProperty(key)) { // Important:  Don't copy inherited properties.
+          copy[key] = deepCopy(obj[key]);
+        }
+      }
+      return copy;
+    }
+  
+    // Should never get here, but handle it for robustness.
+    return undefined;
+  }

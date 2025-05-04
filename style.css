@@ -627,8 +627,6 @@ button:disabled {
     display: block;
     /* Center image horizontally and vertically*/
     margin: 0 auto;
-    /* Center image horizontally */
-    transform: translateY(-7px);
     /* Adjust vertical position */
 
 }
@@ -641,8 +639,8 @@ button:disabled {
     bottom: 0px;
     left: 50%;
     transform: translateX(-50%);
-    width: 80%;
-    height: 40px;
+    width: 200px;
+    height: 50px;
     border-radius: 12px;
     background-color: #007aff;
     color: white;
@@ -773,64 +771,227 @@ button:disabled {
 
 .teams-circle-container {
     width: 250px;
+    /* Or your desired size */
     height: 250px;
     border-radius: 50%;
     border: 2px solid var(--ios-mid-gray);
     position: relative;
     margin: 20px auto;
     overflow: hidden;
-    /* Important for clip-path or masks */
+    /* Important for clip-path */
 }
 
 /* Basic Team Segment Styling (Hardcoded for up to 5 - needs JS adjustment) */
 .team-segment {
     position: absolute;
-    width: 50%;
-    height: 50%;
-    /* background-color: rgba(0, 122, 255, 0.1); Placeholder */
-    /* border: 1px solid var(--ios-blue); Placeholder */
+    width: 100%;
+    /* Use full container width/height */
+    height: 100%;
+    top: 0;
+    left: 0;
+    /* background-color: rgba(0, 122, 255, 0.05); */
+    /* Optional faint background for testing */
     display: flex;
     flex-direction: column;
-    /* Stack title and members */
     align-items: center;
-    justify-content: center;
-    padding: 10px;
+    justify-content: flex-start;
+    /* Align content towards top/center */
+    padding-top: 15%;
+    /* Adjust padding to position content within segment */
     box-sizing: border-box;
-    transform-origin: 100% 100%;
-    /* For rotation */
     text-align: center;
+    /* We will use clip-path to shape the segment */
+    /* transform-origin set by specific team styles */
 }
 
 .team-segment h5 {
     /* Team Name */
-    margin: 0 0 5px 0;
-    font-size: 12px;
+    margin: 0 0 8px 0;
+    font-size: 13px;
     font-weight: 600;
+    color: var(--ios-dark-gray);
 }
 
 .team-members {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 4px;
+    gap: 5px;
+    max-width: 80%;
+    /* Prevent members spilling too wide */
 }
 
 .team-member-pfp {
-    width: 30px;
-    height: 30px;
+    width: 35px;
+    /* Slightly larger? */
+    height: 35px;
     border-radius: 50%;
-    border: 1px solid white;
-    /* Outline */
+    border: 1.5px solid white;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+    /* Add subtle shadow */
     cursor: grab;
-    /* Indicate draggable */
+    object-fit: cover;
 }
 
 .team-member-pfp:active {
     cursor: grabbing;
 }
 
-/* TODO: Add complex CSS/SVG/JS for actual circular segments and drag/drop targets */
-/* This requires more advanced techniques like clip-path, SVG paths, or canvas */
+.teams-circle-container[data-team-count="1"] .team-segment {
+    /* No clip-path needed */
+    padding-top: 30%;
+    /* Center content more */
+}
+
+.teams-circle-container[data-team-count="1"] .team-segment::after {
+    display: none;
+    /* Hide divider lines */
+}
+
+
+
+/* Case 2 Teams: Top/Bottom halves */
+.teams-circle-container[data-team-count="2"] .team-segment-1 {
+    clip-path: polygon(0% 0%, 100% 0%, 100% 50%, 0% 50%);
+    /* Top half */
+    padding-top: 10%;
+}
+
+.teams-circle-container[data-team-count="2"] .team-segment-2 {
+    clip-path: polygon(0% 50%, 100% 50%, 100% 100%, 0% 100%);
+    /* Bottom half */
+    padding-top: 55%;
+}
+
+/* Add divider line */
+.teams-circle-container[data-team-count="2"]::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: var(--ios-mid-gray);
+    transform: translateY(-50%);
+}
+
+/* Case 3 Teams: ~120 degree slices */
+.teams-circle-container[data-team-count="3"] .team-segment-1 {
+    clip-path: polygon(50% 50%, -36.6% 0%, 136.6% 0%); /* Top */
+    padding-top: 15%; /* Adjust padding to position content */
+    text-align: center; /* Center content horizontally */
+}
+
+.teams-circle-container[data-team-count="3"] .team-segment-2 {
+    clip-path: polygon(50% 50%, 136.6% 0%, -36.6% 0%); /* Bottom-Left */
+    padding-left: 15%; /* Adjust padding to position content */
+    transform-origin: 50% 50%; /* Set origin for rotation */
+    transform: rotate(-120deg); /* Rotate the segment */
+    display: flex; /* Use flexbox for better content alignment */
+    justify-content: flex-start; /* Align content to the start (left after rotation) */
+    align-items: center; /* Center content vertically */
+}
+
+.teams-circle-container[data-team-count="3"] .team-segment-3 {
+    clip-path: polygon(50% 50%, 136.6% 0%, -36.6% 0%); /* Bottom-Right */
+    padding-right: 15%; /* Adjust padding to position content */
+    transform-origin: 50% 50%; /* Set origin for rotation */
+    transform: rotate(120deg); /* Rotate the segment */
+    display: flex; /* Use flexbox for better content alignment */
+    justify-content: flex-end; /* Align content to the end (right after rotation) */
+    align-items: center; /* Center content vertically */
+}
+
+/* Divider lines for 3 are harder with simple clip-path, might need SVG */
+
+
+/* Case 4 Teams: Quadrants */
+.teams-circle-container[data-team-count="4"] .team-segment-1 {
+    clip-path: polygon(50% 0%, 100% 0%, 100% 50%, 50% 50%);
+    /* Top-right */
+    padding-top: 10%;
+    justify-content: flex-start;
+    align-items: flex-end;
+    padding-right: 10%;
+}
+
+.teams-circle-container[data-team-count="4"] .team-segment-2 {
+    clip-path: polygon(0% 0%, 50% 0%, 50% 50%, 0% 50%);
+    /* Top-left */
+    padding-top: 10%;
+    justify-content: flex-start;
+    align-items: flex-start;
+    padding-left: 10%;
+}
+
+.teams-circle-container[data-team-count="4"] .team-segment-3 {
+    clip-path: polygon(0% 50%, 50% 50%, 50% 100%, 0% 100%);
+    /* Bottom-left */
+    padding-top: 55%;
+    justify-content: flex-end;
+    align-items: flex-start;
+    padding-left: 10%;
+}
+
+.teams-circle-container[data-team-count="4"] .team-segment-4 {
+    clip-path: polygon(50% 50%, 100% 50%, 100% 100%, 50% 100%);
+    /* Bottom-right */
+    padding-top: 55%;
+    justify-content: flex-end;
+    align-items: flex-end;
+    padding-right: 10%;
+}
+
+/* Divider lines */
+.teams-circle-container[data-team-count="4"]::before {
+    /* Vertical */
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 1px;
+    height: 100%;
+    background: var(--ios-mid-gray);
+    transform: translateX(-50%);
+}
+
+.teams-circle-container[data-team-count="4"]::after {
+    /* Horizontal */
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: var(--ios-mid-gray);
+    transform: translateY(-50%);
+}
+
+
+/* Case 5 Teams: More complex slices (clip-path gets tricky) */
+/* Similar complexity to 3 teams. Might require SVG approach for clean lines/shapes */
+.teams-circle-container[data-team-count="5"] .team-segment {
+    /* Placeholder - Needs specific clip-paths or alternative method */
+    /* Example for first segment (top-ish) */
+    clip-path: polygon(50% 50%, 30% 0%, 70% 0%);
+    padding-top: 5%;
+}
+
+.teams-circle-container[data-team-count="5"] .team-segment-1 {}
+
+.teams-circle-container[data-team-count="5"] .team-segment-2 {}
+
+/* ... define others ... */
+
+
+/* Style for drag-over state on segments/unassigned */
+.team-segment.drag-over,
+.unassigned-members.drag-over {
+    background-color: rgba(0, 122, 255, 0.1);
+    /* Light blue highlight */
+    outline: 2px dashed var(--ios-blue);
+    outline-offset: -2px;
+}
 
 
 /* --- Utility --- */

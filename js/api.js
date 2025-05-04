@@ -317,7 +317,7 @@ function apiUpdateActivityDetail(groupId, activityId, field, value) {
         groupId: groupId,
         activityId: activityId,
         field: field, // 'materials' or 'time'
-        value: encodeURIComponent(value)
+        value: value
     });
     // Backend should also trigger system message in chat
 }
@@ -359,5 +359,13 @@ function apiCreateActivity(groupId, title, description = '') {
         title: title,
         description: description
         // Add other fields like materials, time if needed
+    });
+}
+
+function apiDeleteActivity(groupId, activityId) {
+    return callApi({
+        action: 'deleteActivity', // New action name
+        groupId: groupId,
+        activityId: activityId
     });
 }

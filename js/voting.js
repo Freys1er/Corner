@@ -256,13 +256,13 @@ async function handleShowPollInfo(event) {
 
         // Construct the final modal content
         const infoContentHTML = `
-            <h2 style="word-wrap: break-word;">Info: ${pollTitle}</h2>
+            <h2 style="word-wrap: break-word;">${pollTitle}</h2>
             <h4>Results</h4>
             ${statsHTML}
             <div class="modal-actions" style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
                  <!-- Delete Button (use caution icon or red color) -->
                  <button id="delete-poll-btn" data-poll-id="${pollId}" data-poll-title="${encodeURIComponent(pollTitle)}" class="ios-button-text" style="color: var(--ios-red);">
-                      🗑️ Delete Poll
+                      Delete Poll
                  </button>
                  <!-- Close Button -->
                  <button id="close-info-btn" class="ios-button-primary">Close</button>

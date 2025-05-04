@@ -67,7 +67,7 @@ async function showActivityDetailView(groupId, activityId) {
     detailContainer.classList.remove('hidden');
 
     try {
-        currentActivityDetail = await apiGetActivityDetail(groupId, activityId); // API call is fine
+        currentActivityDetail = deepCopy(await apiGetActivityDetail(groupId, activityId)); // API call is fine
         renderActivityDetail(currentActivityDetail);
     } catch (error) {
         console.error("Failed to load activity detail:", error);
@@ -75,81 +75,91 @@ async function showActivityDetailView(groupId, activityId) {
         currentActivityDetail = null;
     }
 
-    //Hid the FAB button when the detail view is open
+    //Hide the FAB button when the detail view is open
     if (fabAddButton) {
         fabAddButton.style.display = 'none'; // Hide FAB button
     }
 }
 
+
 function renderActivityDetail(activity) {
-    // No changes needed in this function itself
     const detailContainer = document.getElementById('activity-detail-container');
-    if (!activity) {
+    if (!activity || !activity.id) { // Check for valid activity object
         detailContainer.innerHTML = '<p class="error">Could not load activity data.</p>';
         return;
     }
+    const teamCount = activity.teamCount || 1; // Get team count
 
+    // Prepare HTML, including the new delete button
     detailContainer.innerHTML = `
         <div class="activity-detail-view">
-            <h3>${activity.title}</h3>
-             ${activity.description ? `
-                <div class="detail-section">
-                     <h4>Description</h4>
-                     <div class="editable-field" id="activity-description" data-field="description" contenteditable="false">${activity.description}</div>
-                 </div>` : `
-                 <div class="detail-section">
-                     <h4>Description</h4>
-                     <div class="editable-field" id="activity-description" data-field="description" contenteditable="false">Not specified</div>
-                 </div>`
-        }
-            <div class="detail-section">
-                <h4>Materials</h4>
-                <div class="editable-field" id="activity-materials" data-field="materials" contenteditable="false">${activity.materials || 'Not specified'}</div>
-            </div>
-            <div class="detail-section">
-                <h4>Time</h4>
-                <div class="editable-field" id="activity-time" data-field="time" contenteditable="false">${activity.time || 'Not specified'}</div>
-            </div>
+            <h3>${activity.title || 'Untitled Activity'}</h3>
+
+            ${activity.description ? `<div class="detail-section"><h4>Description</h4><div class="editable-field" id="activity-description" data-field="description" contenteditable="false">${activity.description}</div></div>` : `<div class="detail-section"><h4>Description</h4><div class="editable-field" id="activity-description" data-field="description" contenteditable="false">Not specified</div></div>`}
+            <div class="detail-section"><h4>Materials</h4><div class="editable-field" id="activity-materials" data-field="materials" contenteditable="false">${activity.materials || 'Not specified'}</div></div>
+            <div class="detail-section"><h4>Time</h4><div class="editable-field" id="activity-time" data-field="time" contenteditable="false">${activity.time || 'Not specified'}</div></div>
+
             <div class="detail-section teams-section">
                 <h4>Teams</h4>
                 <div class="controls">
-                    <span>Teams: ${Object.keys(activity.teams).filter(t => t !== 'unassigned').length}</span>
-                    <button id="remove-team-btn" ${Object.keys(activity.teams).filter(t => t !== 'unassigned').length <= 1 ? 'disabled' : ''}>-</button>
-                    <button id="add-team-btn" ${Object.keys(activity.teams).filter(t => t !== 'unassigned').length >= 5 ? 'disabled' : ''}>+</button>
+                    <span>Teams: ${teamCount}</span>
+                    <button id="remove-team-btn" ${teamCount <= 1 ? 'disabled' : ''}>-</button>
+                    <button id="add-team-btn" ${teamCount >= 5 ? 'disabled' : ''}>+</button>
                 </div>
-                <div class="teams-circle-container" id="teams-display"></div>
-                <div class="unassigned-members" id="unassigned-members"></div>
+                <!-- Add data-team-count attribute for CSS styling -->
+                <div class="teams-circle-container" id="teams-display" data-team-count="${teamCount}">
+                    <!-- Teams segments will be rendered here by renderTeams -->
+                </div>
+                <div class="unassigned-members" id="unassigned-members">
+                    <!-- Unassigned members rendered here -->
+                </div>
             </div>
-             <button id="close-detail-view-btn" style="margin-top: 15px;">Close Details</button>
+
+             <!-- Action Buttons at the Bottom -->
+             <div class="activity-detail-actions" style="display: flex; justify-content: space-between; margin-top: 20px; padding-top: 10px; border-top: 1px solid var(--separator-color);">
+                 <button id="delete-activity-btn" data-activity-id="${activity.id}" data-activity-title="${encodeURIComponent(activity.title || '')}" class="ios-button-text" style="color: var(--ios-red);">
+                      Delete Activity
+                 </button>
+                 <button id="close-detail-view-btn" class="ios-button-text" style="color: var(--ios-blue);">Close Details</button>
+             </div>
         </div>
     `;
 
-    renderTeams(activity.teams, activity.members); // Pass members object too
+    console.log(activity); // Debugging output
+
+    renderTeams(activity.teams, activity.members, teamCount); // Pass teamCount to renderTeams
     addActivityDetailEventListeners(activity.id);
 }
 
 function addActivityDetailEventListeners(activityId) {
-    // No changes needed in this function itself
+    // Close button
     document.getElementById('close-detail-view-btn')?.addEventListener('click', () => {
         document.getElementById('activity-detail-container').classList.add('hidden');
         currentActivityDetail = null;
-        //Show FAB button again
+        //Show the FAB button again when closing the detail view
         if (fabAddButton) {
             fabAddButton.style.display = 'block'; // Show FAB button again
         }
     });
 
+    // Delete button
+    document.getElementById('delete-activity-btn')?.addEventListener('click', handleDeleteActivityClick); // New handler
+
+    // Editable Fields
     document.querySelectorAll('.editable-field').forEach(field => {
         field.addEventListener('click', () => { if (field.contentEditable !== 'true') makeFieldEditable(field); });
         field.addEventListener('blur', (event) => { if (field.dataset.editing === 'true') saveFieldEdit(event.target, activityId); });
         field.addEventListener('keypress', (event) => { if (event.key === 'Enter' && field.tagName !== 'TEXTAREA') { event.preventDefault(); field.blur(); } });
     });
 
+    // Team controls (+/- buttons)
     document.getElementById('add-team-btn')?.addEventListener('click', () => handleUpdateTeams(activityId, '+1'));
     document.getElementById('remove-team-btn')?.addEventListener('click', () => handleUpdateTeams(activityId, '-1'));
 
+    // Drag and Drop setup
     setupDragAndDrop(activityId);
 }
+
 
 
 function makeFieldEditable(fieldElement) {
@@ -214,7 +224,7 @@ async function handleUpdateTeams(activityId, change) {
         const updatedActivity = await apiUpdateTeams(currentGroupId, activityId, change); // API call fine
 
         if (updatedActivity) {
-            currentActivityDetail = updatedActivity; // Update local cache
+            currentActivityDetail = deepCopy(updatedActivity); // Update local cache
             renderActivityDetail(currentActivityDetail); // Re-render the entire detail section
 
             // **** CHANGE: Use currentUser for system message ****
@@ -237,54 +247,50 @@ async function handleUpdateTeams(activityId, change) {
 }
 
 // --- Team Rendering & Drag/Drop ---
-
-function renderTeams(teamsData, membersData) {
-    // No changes needed in this function itself
-    const teamsDisplay = document.getElementById('teams-display');
+function renderTeams(teamsData, membersData, teamCount) {
+    console.log(teamsData, membersData, teamCount); // Debugging output
+    const teamsDisplay = document.getElementById('teams-display'); // The circle container
     const unassignedContainer = document.getElementById('unassigned-members');
-    teamsDisplay.innerHTML = '';
-    // Clear previous content in unassigned, add header back
-    unassignedContainer.innerHTML = '';
-    const unassignedHeader = document.createElement('h4');
-    unassignedHeader.textContent = 'Unassigned';
-    unassignedContainer.appendChild(unassignedHeader);
+    if (!teamsDisplay || !unassignedContainer) return; // Exit if containers not found
 
+    teamsDisplay.innerHTML = ''; // Clear previous segments
+    unassignedContainer.innerHTML = '<h4>Unassigned</h4>'; // Reset unassigned
 
-    const teamIds = Object.keys(teamsData).filter(id => id !== 'unassigned').sort(); // Sort team names ('team1', 'team2')
-    const numTeams = teamIds.length;
-
-    // TODO: Implement actual circular layout if desired (complex)
-    // Basic block layout for now
-    teamIds.forEach((teamId, index) => {
+    // --- Render Numbered Team Segments ---
+    // This uses CSS variables and potentially clip-path based on data-team-count attribute set on parent
+    for (let i = 1; i <= teamCount; i++) {
+        const teamId = `team${i}`;
         const segment = document.createElement('div');
-        segment.classList.add('team-segment'); // Basic segment styling
+        segment.className = `team-segment team-segment-${i}`; // Add specific class for styling
         segment.dataset.teamId = teamId;
-        // Add styling/positioning for circle later
-        segment.innerHTML = `<h5>${teamId}</h5><div class="team-members"></div>`;
+        // Calculate rotation and other styles based on index/count (more complex, often done in CSS)
+        // Example: Inline style for basic rotation (adjustments needed for perfect fit)
+        const angle = 360 / teamCount;
+        segment.style.transform = `rotate(${(i - 1) * angle}deg) translateY(-10% 10%)`;
 
+        segment.innerHTML = `<h5>${teamId}</h5><div class="team-members"></div>`;
         const membersContainer = segment.querySelector('.team-members');
-        (teamsData[teamId] || []).forEach(memberEmail => { // Iterate through emails in the team
-            const member = membersData[memberEmail]; // Look up details using email
+        (teamsData[teamId] || []).forEach(memberEmail => {
+            const member = membersData[memberEmail];
             if (member) {
                 const pfp = createMemberPfpElement(memberEmail, member.pfp, member.name);
                 membersContainer.appendChild(pfp);
-            } else {
-                console.warn(`Member details not found for email: ${memberEmail} in team ${teamId}`);
             }
         });
         teamsDisplay.appendChild(segment);
-    });
+    }
 
-    // Render unassigned members
+    // --- Render Unassigned Members ---
     (teamsData['unassigned'] || []).forEach(memberEmail => {
         const member = membersData[memberEmail];
         if (member) {
             const pfp = createMemberPfpElement(memberEmail, member.pfp, member.name);
             unassignedContainer.appendChild(pfp);
-        } else {
-            console.warn(`Member details not found for email: ${memberEmail} in unassigned`);
         }
     });
+
+    // Add drop zone listeners dynamically after rendering segments
+    setupDragAndDrop(currentActivityDetail?.id); // Re-run DND setup after rendering new targets
 }
 
 
@@ -358,7 +364,7 @@ function setupDragAndDrop(activityId) {
                 const updatedActivity = await apiAssignTeamMember(currentGroupId, activityId, memberId, targetTeamId); // API call is fine
 
                 if (updatedActivity) {
-                    currentActivityDetail = updatedActivity; // Update cache
+                    currentActivityDetail = deepCopy(updatedActivity); // Update cache
                     renderActivityDetail(currentActivityDetail); // Re-render
 
                     // **** CHANGE: Use currentUser and fetched member details for system message ****
@@ -391,15 +397,6 @@ function setupDragAndDrop(activityId) {
     });
 }
 
-
-// js/activities.js
-
-// ... (loadActivitiesTab, fetchAndRenderActivities, etc.) ...
-
-/**
- * Displays a modal for creating a new activity.
- * Triggered by the FAB when the activities tab is active.
- */
 function showCreateActivityModal() {
     console.log("showCreateActivityModal called");
     if (!currentGroupId) {
@@ -438,9 +435,7 @@ function showCreateActivityModal() {
     document.getElementById('submit-create-activity')?.addEventListener('click', handleCreateActivitySubmit);
 }
 
-/**
- * Handles the submission of the create activity form/modal.
- */
+
 async function handleCreateActivitySubmit() {
     const titleInput = document.getElementById('activity-title-input');
     const descInput = document.getElementById('activity-desc-input');
@@ -488,4 +483,47 @@ async function handleCreateActivitySubmit() {
     }
 }
 
-// --- You also need to add apiCreateActivity to api.js and handleCreateActivity in Activities.gs ---
+async function handleDeleteActivityClick(event) {
+    const button = event.currentTarget;
+    const activityId = button.dataset.activityId;
+    const encodedTitle = button.dataset.activityTitle;
+    const activityTitle = decodeURIComponent(encodedTitle || `Activity ID ${activityId}`);
+
+    if (!activityId) {
+        console.error("Delete button clicked, but activityId not found in dataset.");
+        return;
+    }
+
+    // Confirmation dialog
+    if (!confirm(`Are you sure you want to permanently delete the activity "${activityTitle}"? This will remove all its details and team assignments.`)) {
+        console.log("Activity deletion cancelled by user.");
+        return; // User cancelled
+    }
+
+    if (fabAddButton) {
+        fabAddButton.style.display = 'block'; // Show FAB button again
+    }
+    console.log(`Proceeding with deletion for activity ${activityId}...`);
+    showLoading("Deleting activity..."); // Show loading indicator
+    button.disabled = true; // Disable button while processing
+
+    try {
+        const result = await apiDeleteActivity(currentGroupId, activityId); // Call API
+
+        if (result && result.success) {
+            alert(`Activity "${activityTitle}" deleted successfully.`);
+            // Hide the detail view and refresh the main activity list
+            document.getElementById('activity-detail-container')?.classList.add('hidden');
+            currentActivityDetail = null; // Clear cached detail
+            fetchAndRenderActivities(currentGroupId); // Refresh list
+        } else {
+            throw new Error(result.message || "Backend reported failure to delete.");
+        }
+    } catch (error) {
+        console.error(`Failed to delete activity ${activityId}:`, error);
+        alert(`Failed to delete activity: ${error.message}`);
+        button.disabled = false; // Re-enable button on error
+    } finally {
+        hideLoading(); // Hide loading indicator
+    }
+}
