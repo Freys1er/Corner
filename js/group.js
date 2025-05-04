@@ -2,6 +2,10 @@ let currentGroupId = null;
 let currentGroupName = null;
 let currentGroupCode = null; // Store the group code
 
+let fabAddButton = null; // Variable to hold the FAB element reference
+let currentFabListener = null; // Variable to hold the currently attached listener function
+
+
 async function loadGroupView(groupId) {
     currentGroupId = groupId;
     showLoading('Loading group...');
@@ -25,14 +29,18 @@ async function loadGroupView(groupId) {
 
         // Add back button functionality
         document.getElementById('back-to-groups-btn').addEventListener('click', () => {
-             navigateToGroupList(); // Or use history.back() if using pushState routing
-             currentGroupId = null; // Clear current group
-             currentGroupName = null;
-             currentGroupCode = null;
+            navigateToGroupList(); // Or use history.back() if using pushState routing
+            currentGroupId = null; // Clear current group
+            currentGroupName = null;
+            currentGroupCode = null;
         });
-         // Add settings button functionality (placeholder)
-         document.getElementById('group-settings-btn').addEventListener('click', showGroupSettings);
+        // Add settings button functionality (placeholder)
+        document.getElementById('group-settings-btn').addEventListener('click', showGroupSettings);
 
+        fabAddButton = document.getElementById('fab-add-btn');
+        if (!fabAddButton) {
+            console.error("FAB button #fab-add-btn not found in group-view.html!");
+        }
 
         // Set up tab switching
         const tabs = document.querySelectorAll('.tab-item');
@@ -63,6 +71,37 @@ function switchTab(tabId) {
     // Load content for the selected tab
     showLoading('Loading content...'); // Show loading indicator for tab content
     contentArea.innerHTML = ''; // Clear previous content
+
+    if (fabAddButton) {
+        // 1. Remove previous listener if one exists
+        if (currentFabListener) {
+            fabAddButton.removeEventListener('click', currentFabListener);
+            currentFabListener = null;
+            console.log("Removed previous FAB listener.");
+        }
+
+        // 2. Set visibility and new listener based on tabId
+        switch (tabId) {
+            case 'voting':
+                fabAddButton.classList.remove('hidden'); // Show FAB
+                currentFabListener = () => showCreatePollModal(currentGroupId); // Define new listener
+                fabAddButton.addEventListener('click', currentFabListener); // Attach new listener
+                console.log("Attached 'Create Poll' listener to FAB.");
+                break;
+            case 'activities':
+                fabAddButton.classList.remove('hidden'); // Show FAB
+                currentFabListener = showCreateActivityModal; // Define new listener (function in activities.js)
+                fabAddButton.addEventListener('click', currentFabListener); // Attach new listener
+                console.log("Attached 'Create Activity' listener to FAB.");
+                break;
+            default: // 'chat' or any other tabs hide the button
+                fabAddButton.classList.add('hidden'); // Hide FAB
+                console.log("FAB hidden.");
+                break;
+        }
+    } else {
+        console.warn("FAB button reference not available in switchTab.");
+    }
 
     switch (tabId) {
         case 'chat':
@@ -105,25 +144,25 @@ function showGroupSettings() {
 }
 
 async function handleResetCode() {
-     if (!confirm("Are you sure you want to generate a new code? The old one will stop working.")) {
-         return;
-     }
-     showLoading("Resetting code...");
-     try {
-         const result = await apiResetGroupCode(currentGroupId);
-         if (result && result.newCode) {
-             currentGroupCode = result.newCode;
-             alert("Group code has been reset.");
-             hideModal(); // Close the current modal
-             showGroupSettings(); // Reopen with the new code
-         } else {
-             alert(result.message || "Failed to reset code.");
-         }
-     } catch (error) {
-         console.error("Reset code failed:", error);
-     } finally {
-         hideLoading();
-     }
+    if (!confirm("Are you sure you want to generate a new code? The old one will stop working.")) {
+        return;
+    }
+    showLoading("Resetting code...");
+    try {
+        const result = await apiResetGroupCode(currentGroupId);
+        if (result && result.newCode) {
+            currentGroupCode = result.newCode;
+            alert("Group code has been reset.");
+            hideModal(); // Close the current modal
+            showGroupSettings(); // Reopen with the new code
+        } else {
+            alert(result.message || "Failed to reset code.");
+        }
+    } catch (error) {
+        console.error("Reset code failed:", error);
+    } finally {
+        hideLoading();
+    }
 }
 
 function handleShareCode(shareUrl) {
@@ -133,8 +172,8 @@ function handleShareCode(shareUrl) {
             text: `Use this link or the code ${currentGroupCode} to join!`,
             url: shareUrl,
         })
-        .then(() => console.log('Successful share'))
-        .catch((error) => console.log('Error sharing', error));
+            .then(() => console.log('Successful share'))
+            .catch((error) => console.log('Error sharing', error));
     } else {
         // Fallback for browsers that don't support Web Share API
         prompt("Copy this link to share:", shareUrl);

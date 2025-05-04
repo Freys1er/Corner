@@ -45,7 +45,7 @@ async function fetchAndRenderActivities(groupId) {
                 </li>
             `;
         });
-         activitiesHTML += '</ul>';
+        activitiesHTML += '</ul>';
         activityListContainer.innerHTML = activitiesHTML;
 
         // Add event listeners
@@ -74,14 +74,19 @@ async function showActivityDetailView(groupId, activityId) {
         detailContainer.innerHTML = `<p class="error">Failed to load details: ${error.message}</p>`;
         currentActivityDetail = null;
     }
+
+    //Hid the FAB button when the detail view is open
+    if (fabAddButton) {
+        fabAddButton.style.display = 'none'; // Hide FAB button
+    }
 }
 
 function renderActivityDetail(activity) {
     // No changes needed in this function itself
     const detailContainer = document.getElementById('activity-detail-container');
     if (!activity) {
-         detailContainer.innerHTML = '<p class="error">Could not load activity data.</p>';
-         return;
+        detailContainer.innerHTML = '<p class="error">Could not load activity data.</p>';
+        return;
     }
 
     detailContainer.innerHTML = `
@@ -96,7 +101,7 @@ function renderActivityDetail(activity) {
                      <h4>Description</h4>
                      <div class="editable-field" id="activity-description" data-field="description" contenteditable="false">Not specified</div>
                  </div>`
-             }
+        }
             <div class="detail-section">
                 <h4>Materials</h4>
                 <div class="editable-field" id="activity-materials" data-field="materials" contenteditable="false">${activity.materials || 'Not specified'}</div>
@@ -126,20 +131,24 @@ function renderActivityDetail(activity) {
 function addActivityDetailEventListeners(activityId) {
     // No changes needed in this function itself
     document.getElementById('close-detail-view-btn')?.addEventListener('click', () => {
-         document.getElementById('activity-detail-container').classList.add('hidden');
-         currentActivityDetail = null;
+        document.getElementById('activity-detail-container').classList.add('hidden');
+        currentActivityDetail = null;
+        //Show FAB button again
+        if (fabAddButton) {
+            fabAddButton.style.display = 'block'; // Show FAB button again
+        }
     });
 
     document.querySelectorAll('.editable-field').forEach(field => {
         field.addEventListener('click', () => { if (field.contentEditable !== 'true') makeFieldEditable(field); });
-         field.addEventListener('blur', (event) => { if (field.dataset.editing === 'true') saveFieldEdit(event.target, activityId); });
-         field.addEventListener('keypress', (event) => { if (event.key === 'Enter' && field.tagName !== 'TEXTAREA') { event.preventDefault(); field.blur(); }});
+        field.addEventListener('blur', (event) => { if (field.dataset.editing === 'true') saveFieldEdit(event.target, activityId); });
+        field.addEventListener('keypress', (event) => { if (event.key === 'Enter' && field.tagName !== 'TEXTAREA') { event.preventDefault(); field.blur(); } });
     });
 
-     document.getElementById('add-team-btn')?.addEventListener('click', () => handleUpdateTeams(activityId, '+1'));
-     document.getElementById('remove-team-btn')?.addEventListener('click', () => handleUpdateTeams(activityId, '-1'));
+    document.getElementById('add-team-btn')?.addEventListener('click', () => handleUpdateTeams(activityId, '+1'));
+    document.getElementById('remove-team-btn')?.addEventListener('click', () => handleUpdateTeams(activityId, '-1'));
 
-     setupDragAndDrop(activityId);
+    setupDragAndDrop(activityId);
 }
 
 
@@ -171,16 +180,16 @@ async function saveFieldEdit(fieldElement, activityId) {
         await apiUpdateActivityDetail(currentGroupId, activityId, fieldName, newValue); // API call is fine
 
         // Update local data cache if successful
-        if(currentActivityDetail) {
-             currentActivityDetail[fieldName] = newValue;
-             fieldElement.dataset.originalValue = newValue;
+        if (currentActivityDetail) {
+            currentActivityDetail[fieldName] = newValue;
+            fieldElement.dataset.originalValue = newValue;
         }
 
         // **** CHANGE: Use currentUser for system message ****
         if (currentUser && currentActivityDetail) {
             // Use currentActivityDetail.title which reflects the latest state (important if title was edited)
-             const displayTitle = currentActivityDetail.title || 'this activity';
-             postSystemMessageToChat(`${currentUser.name.toUpperCase()} UPDATED ${fieldName.toUpperCase()} FOR ACTIVITY '${displayTitle.toUpperCase()}'`);
+            const displayTitle = currentActivityDetail.title || 'this activity';
+            postSystemMessageToChat(`${currentUser.name.toUpperCase()} UPDATED ${fieldName.toUpperCase()} FOR ACTIVITY '${displayTitle.toUpperCase()}'`);
         } else {
             console.warn("Cannot post system message: currentUser or currentActivityDetail missing.");
         }
@@ -196,33 +205,33 @@ async function saveFieldEdit(fieldElement, activityId) {
 
 // **** MODIFIED FUNCTION ****
 async function handleUpdateTeams(activityId, change) {
-     const addButton = document.getElementById('add-team-btn');
-     const removeButton = document.getElementById('remove-team-btn');
-     if(addButton) addButton.disabled = true;
-     if(removeButton) removeButton.disabled = true;
+    const addButton = document.getElementById('add-team-btn');
+    const removeButton = document.getElementById('remove-team-btn');
+    if (addButton) addButton.disabled = true;
+    if (removeButton) removeButton.disabled = true;
 
     try {
-         const updatedActivity = await apiUpdateTeams(currentGroupId, activityId, change); // API call fine
+        const updatedActivity = await apiUpdateTeams(currentGroupId, activityId, change); // API call fine
 
-         if (updatedActivity) {
-             currentActivityDetail = updatedActivity; // Update local cache
-             renderActivityDetail(currentActivityDetail); // Re-render the entire detail section
+        if (updatedActivity) {
+            currentActivityDetail = updatedActivity; // Update local cache
+            renderActivityDetail(currentActivityDetail); // Re-render the entire detail section
 
             // **** CHANGE: Use currentUser for system message ****
-             if (currentUser && currentActivityDetail) {
-                 const displayTitle = currentActivityDetail.title || 'this activity';
-                 postSystemMessageToChat(`${currentUser.name.toUpperCase()} ADJUSTED TEAMS FOR ACTIVITY '${displayTitle.toUpperCase()}'`);
-             } else {
-                 console.warn("Cannot post system message: currentUser or currentActivityDetail missing.");
-             }
+            if (currentUser && currentActivityDetail) {
+                const displayTitle = currentActivityDetail.title || 'this activity';
+                postSystemMessageToChat(`${currentUser.name.toUpperCase()} ADJUSTED TEAMS FOR ACTIVITY '${displayTitle.toUpperCase()}'`);
+            } else {
+                console.warn("Cannot post system message: currentUser or currentActivityDetail missing.");
+            }
 
-         } else {
-             throw new Error("API did not return updated activity details.");
-         }
-    } catch(error) {
+        } else {
+            throw new Error("API did not return updated activity details.");
+        }
+    } catch (error) {
         console.error("Failed to update teams:", error);
         alert("Failed to update teams.");
-        if(currentActivityDetail) renderActivityDetail(currentActivityDetail); // Re-render to restore state
+        if (currentActivityDetail) renderActivityDetail(currentActivityDetail); // Re-render to restore state
     }
     // Buttons will be re-rendered/re-enabled by renderActivityDetail
 }
@@ -268,13 +277,13 @@ function renderTeams(teamsData, membersData) {
 
     // Render unassigned members
     (teamsData['unassigned'] || []).forEach(memberEmail => {
-         const member = membersData[memberEmail];
-         if (member) {
-              const pfp = createMemberPfpElement(memberEmail, member.pfp, member.name);
-              unassignedContainer.appendChild(pfp);
-         } else {
-             console.warn(`Member details not found for email: ${memberEmail} in unassigned`);
-         }
+        const member = membersData[memberEmail];
+        if (member) {
+            const pfp = createMemberPfpElement(memberEmail, member.pfp, member.name);
+            unassignedContainer.appendChild(pfp);
+        } else {
+            console.warn(`Member details not found for email: ${memberEmail} in unassigned`);
+        }
     });
 }
 
@@ -314,9 +323,9 @@ function setupDragAndDrop(activityId) {
         zone.addEventListener('dragover', (e) => {
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
-             zone.classList.add('drag-over');
+            zone.classList.add('drag-over');
         });
-         zone.addEventListener('dragleave', (e) => { zone.classList.remove('drag-over'); });
+        zone.addEventListener('dragleave', (e) => { zone.classList.remove('drag-over'); });
 
         // **** Drop Handler Modification ****
         zone.addEventListener('drop', async (e) => {
@@ -349,22 +358,22 @@ function setupDragAndDrop(activityId) {
                 const updatedActivity = await apiAssignTeamMember(currentGroupId, activityId, memberId, targetTeamId); // API call is fine
 
                 if (updatedActivity) {
-                     currentActivityDetail = updatedActivity; // Update cache
-                     renderActivityDetail(currentActivityDetail); // Re-render
+                    currentActivityDetail = updatedActivity; // Update cache
+                    renderActivityDetail(currentActivityDetail); // Re-render
 
                     // **** CHANGE: Use currentUser and fetched member details for system message ****
-                     if (currentUser && currentActivityDetail?.members && currentActivityDetail.members[memberId]) {
-                         const movedMemberName = currentActivityDetail.members[memberId].name || memberId;
-                         const displayTitle = currentActivityDetail.title || 'this activity';
-                         postSystemMessageToChat(`${currentUser.name.toUpperCase()} MOVED ${movedMemberName.toUpperCase()} TO ${targetTeamId.toUpperCase()} FOR ACTIVITY '${displayTitle.toUpperCase()}'`);
-                     } else {
+                    if (currentUser && currentActivityDetail?.members && currentActivityDetail.members[memberId]) {
+                        const movedMemberName = currentActivityDetail.members[memberId].name || memberId;
+                        const displayTitle = currentActivityDetail.title || 'this activity';
+                        postSystemMessageToChat(`${currentUser.name.toUpperCase()} MOVED ${movedMemberName.toUpperCase()} TO ${targetTeamId.toUpperCase()} FOR ACTIVITY '${displayTitle.toUpperCase()}'`);
+                    } else {
                         console.warn("Cannot post system message: Missing data for moved member or current user.");
                         // Post generic message maybe?
                         postSystemMessageToChat(`TEAMS UPDATED FOR ACTIVITY '${(currentActivityDetail?.title || 'this activity').toUpperCase()}'`);
-                     }
+                    }
 
                 } else {
-                     throw new Error("API did not return updated activity details after move.");
+                    throw new Error("API did not return updated activity details after move.");
                 }
 
             } catch (error) {
@@ -381,3 +390,102 @@ function setupDragAndDrop(activityId) {
         });
     });
 }
+
+
+// js/activities.js
+
+// ... (loadActivitiesTab, fetchAndRenderActivities, etc.) ...
+
+/**
+ * Displays a modal for creating a new activity.
+ * Triggered by the FAB when the activities tab is active.
+ */
+function showCreateActivityModal() {
+    console.log("showCreateActivityModal called");
+    if (!currentGroupId) {
+        console.error("Cannot create activity: currentGroupId is not set.");
+        return;
+    }
+
+    // Simple modal structure for now
+    const modalHTML = `
+        <h2>New Activity</h2>
+        <div class="form-group">
+            <label for="activity-title-input">Activity Title:</label>
+            <input type="text" id="activity-title-input" placeholder="e.g., Weekend Hike, Project Brainstorm">
+        </div>
+        <div class="form-group">
+            <label for="activity-desc-input">Description (Optional):</label>
+            <textarea id="activity-desc-input" rows="3" placeholder="Details about the activity..."></textarea>
+        </div>
+        <!-- Add inputs for materials, time if desired -->
+        <div class="modal-actions">
+            <button id="cancel-create-activity" class="ios-button-text">Cancel</button>
+            <button id="submit-create-activity" class="ios-button-primary">Create Activity</button>
+        </div>
+        <style> /* Simple styles needed for form elements inside modal */
+           .form-group { margin-bottom: 15px; }
+           .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+           .form-group input[type="text"], .form-group textarea { width: calc(100% - 22px); padding: 10px; border: 1px solid var(--ios-mid-gray); border-radius: 6px; font-size: 16px; }
+           .form-group textarea { resize: vertical; }
+       </style>
+    `;
+
+    showModal(modalHTML); // Assumes showModal is defined globally or imported
+
+    // Add listeners for the modal buttons
+    document.getElementById('cancel-create-activity')?.addEventListener('click', hideModal);
+    document.getElementById('submit-create-activity')?.addEventListener('click', handleCreateActivitySubmit);
+}
+
+/**
+ * Handles the submission of the create activity form/modal.
+ */
+async function handleCreateActivitySubmit() {
+    const titleInput = document.getElementById('activity-title-input');
+    const descInput = document.getElementById('activity-desc-input');
+
+    const title = titleInput?.value.trim();
+    const description = descInput?.value.trim() || ''; // Optional description
+
+    if (!title) {
+        alert("Please enter an activity title.");
+        titleInput?.focus();
+        return;
+    }
+
+    const submitButton = document.getElementById('submit-create-activity');
+    if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = 'Creating...';
+    }
+    showLoading("Creating activity..."); // Use main loading indicator
+
+    try {
+        // Call the new API function (to be created in api.js)
+        const newActivity = await apiCreateActivity(currentGroupId, title, description);
+
+        if (newActivity && newActivity.id) {
+            hideModal();
+            alert(`Activity "${title}" created successfully!`);
+            // Refresh the activities list
+            fetchAndRenderActivities(currentGroupId);
+            // Optional: Add a system message to chat?
+            // if (currentUser) { postSystemMessageToChat(`${currentUser.name.toUpperCase()} CREATED ACTIVITY '${title.toUpperCase()}'`); }
+        } else {
+            throw new Error(newActivity.message || "Backend did not return new activity details.");
+        }
+
+    } catch (error) {
+        console.error("Failed to create activity:", error);
+        alert(`Failed to create activity: ${error.message}`);
+        if (submitButton) { // Re-enable button on error
+            submitButton.disabled = false;
+            submitButton.textContent = 'Create Activity';
+        }
+    } finally {
+        hideLoading();
+    }
+}
+
+// --- You also need to add apiCreateActivity to api.js and handleCreateActivity in Activities.gs ---

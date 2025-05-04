@@ -77,7 +77,7 @@ async function callApi(params) {
         console.error('API Call Failed:', error);
         if (error.message !== "Your session is invalid. Please log in again." &&
             error.message !== "Authentication token not found. Please log in.") {
-            alert(`Operation failed: ${error.message}`);
+            //alert(`Operation failed: ${error.message}`);
         }
         throw error;
     }
@@ -150,6 +150,61 @@ function apiGetPolls(groupId) {
     return callApi({ action: 'getPolls', groupId: groupId });
     // Returns array: { id, title, options: [{id, text}], userVote: optionId | null }
 }
+
+
+function apiCreatePoll(groupId, title, options) {
+    // Log the raw input received from the frontend logic (e.g., voting.js)
+    console.log("apiCreatePoll called with:", { groupId, title, options });
+
+    // --- Frontend Input Validation ---
+    // Catch basic errors before attempting the API call.
+    if (!groupId || typeof groupId !== 'string' || groupId.trim() === '') {
+        console.error("apiCreatePoll Error: Invalid or missing groupId.");
+        // Return a rejected promise to indicate failure to the caller
+        return Promise.reject(new Error("Invalid or missing Group ID provided."));
+    }
+    if (!title || typeof title !== 'string' || title.trim() === '') {
+        console.error("apiCreatePoll Error: Invalid or missing title.");
+        return Promise.reject(new Error("Invalid or missing poll title provided."));
+    }
+    if (!Array.isArray(options) || options.length < 2) {
+        console.error("apiCreatePoll Error: Invalid or insufficient options provided (requires array with at least 2 elements).");
+        return Promise.reject(new Error("Invalid or insufficient poll options provided (requires at least 2)."));
+    }
+    // Optional: Add check to ensure all options are strings?
+    if (!options.every(opt => typeof opt === 'string')) {
+        console.warn("apiCreatePoll Warning: Not all options are strings. Attempting conversion.");
+        // Attempt basic conversion, backend handleCreatePoll also cleans this
+        options = options.map(opt => String(opt));
+    }
+
+
+    // --- Prepare Parameters for callApi ---
+    // Create the parameter object. Pass the raw title string and the raw options array.
+    // The modified `callApi` function will handle stringifying the 'options' array
+    // and URL-encoding both 'title' and the stringified 'options'.
+    const params = {
+        action: 'createPoll', // The specific backend action to trigger
+        groupId: groupId,
+        title: title,       // Pass the raw title string
+        options: options    // Pass the raw JavaScript options array
+    };
+
+    // --- Make the API Call ---
+    // callApi will add the id_token, stringify/encode params, make the fetch, handle errors.
+    // No need for try/catch here unless there were complex preparations *before* callApi.
+    console.log("apiCreatePoll: Calling callApi with params:", params);
+    return callApi(params);
+}
+function apiDeletePoll(groupId, pollId) {
+    // callApi handles adding auth token and encoding automatically
+    return callApi({
+        action: 'deletePoll', // New action name
+        groupId: groupId,
+        pollId: pollId
+    });
+}
+
 
 // Voting.gs
 
@@ -296,48 +351,13 @@ function apiVerifyGoogleToken(idToken) {
     });
 }
 
-
-function apiCreatePoll(groupId, title, options) {
-    // Log the raw input received from the frontend logic (e.g., voting.js)
-    console.log("apiCreatePoll called with:", { groupId, title, options });
-
-    // --- Frontend Input Validation ---
-    // Catch basic errors before attempting the API call.
-    if (!groupId || typeof groupId !== 'string' || groupId.trim() === '') {
-        console.error("apiCreatePoll Error: Invalid or missing groupId.");
-        // Return a rejected promise to indicate failure to the caller
-        return Promise.reject(new Error("Invalid or missing Group ID provided."));
-    }
-    if (!title || typeof title !== 'string' || title.trim() === '') {
-        console.error("apiCreatePoll Error: Invalid or missing title.");
-        return Promise.reject(new Error("Invalid or missing poll title provided."));
-    }
-    if (!Array.isArray(options) || options.length < 2) {
-        console.error("apiCreatePoll Error: Invalid or insufficient options provided (requires array with at least 2 elements).");
-        return Promise.reject(new Error("Invalid or insufficient poll options provided (requires at least 2)."));
-    }
-    // Optional: Add check to ensure all options are strings?
-    if (!options.every(opt => typeof opt === 'string')) {
-        console.warn("apiCreatePoll Warning: Not all options are strings. Attempting conversion.");
-        // Attempt basic conversion, backend handleCreatePoll also cleans this
-        options = options.map(opt => String(opt));
-    }
-
-
-    // --- Prepare Parameters for callApi ---
-    // Create the parameter object. Pass the raw title string and the raw options array.
-    // The modified `callApi` function will handle stringifying the 'options' array
-    // and URL-encoding both 'title' and the stringified 'options'.
-    const params = {
-        action: 'createPoll', // The specific backend action to trigger
+function apiCreateActivity(groupId, title, description = '') {
+    // callApi handles stringify/encoding
+    return callApi({
+        action: 'createActivity',
         groupId: groupId,
-        title: title,       // Pass the raw title string
-        options: options    // Pass the raw JavaScript options array
-    };
-
-    // --- Make the API Call ---
-    // callApi will add the id_token, stringify/encode params, make the fetch, handle errors.
-    // No need for try/catch here unless there were complex preparations *before* callApi.
-    console.log("apiCreatePoll: Calling callApi with params:", params);
-    return callApi(params);
+        title: title,
+        description: description
+        // Add other fields like materials, time if needed
+    });
 }

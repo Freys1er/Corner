@@ -6,7 +6,7 @@ async function loadVotingTab(groupId, containerElement) {
         containerElement.innerHTML = votingHTML;
 
         // Add event listener for the FAB (+) button
-        document.getElementById('fab-add-poll-btn').addEventListener('click', () => showCreatePollModal(groupId));
+        document.getElementById('fab-add-btn').addEventListener('click', () => showCreatePollModal(groupId));
 
         // Load existing polls
         await fetchAndRenderPolls(groupId);
@@ -126,7 +126,7 @@ function addPollEventListeners(groupId) {
         button.addEventListener('click', handleVote);
     });
     document.querySelectorAll('.info-button').forEach(button => {
-         button.addEventListener('click', handleShowPollInfo);
+        button.addEventListener('click', handleShowPollInfo);
     });
 }
 
@@ -152,20 +152,14 @@ async function handleVote(event) {
         alert("Failed to record vote.");
     } finally {
         // Re-enable buttons
-         pollItemElement.querySelectorAll('.poll-option-btn').forEach(btn => btn.disabled = false);
+        pollItemElement.querySelectorAll('.poll-option-btn').forEach(btn => btn.disabled = false);
     }
 }
 
-async function handleShowPollInfo(event) {
-    const pollId = event.currentTarget.dataset.pollId;
-    alert(`Info button clicked for poll ${pollId}. Stats/comments view TBD.`);
-    // Implementation:
-    // 1. Show loading state in a modal
-    // 2. Call `apiGetPollInfo(currentGroupId, pollId)`
-    // 3. Render the stats (e.g., bars or percentages) and comments in the modal
-}
+// Ensure handleDeletePoll is added to the switch statement in Code.gs
 
 function showCreatePollModal(groupId) {
+    console.log("Create Poll Button clicked for: " + groupId)
     let modalHTML = `
         <h2>Create New Poll</h2>
         <div class="form-group">
@@ -202,6 +196,139 @@ function showCreatePollModal(groupId) {
     document.getElementById('add-poll-option-btn').addEventListener('click', addPollOptionInput);
     document.getElementById('cancel-create-poll').addEventListener('click', hideModal);
     document.getElementById('submit-create-poll').addEventListener('click', () => handleSubmitPoll(groupId));
+}
+
+async function handleShowPollInfo(event) {
+    const pollId = event.currentTarget.dataset.pollId;
+    const pollItemElement = event.currentTarget.closest('.poll-item');
+    const pollTitle = pollItemElement ? (pollItemElement.querySelector('h3')?.textContent || `Poll ID ${pollId}`) : `Poll ID ${pollId}`;
+
+    console.log(`Showing info for Poll ID: ${pollId}, Title: "${pollTitle}"`);
+
+    // Show a basic loading modal immediately
+    showModal(`<h2>Loading Poll Info...</h2><div class="loading-spinner small"></div>`);
+
+    try {
+        // Fetch statistics from the backend
+        // This now needs to return both stats AND the original option texts
+        // Let's assume apiGetPollInfo is modified or we fetch poll details again
+        // Option A: Modify apiGetPollInfo backend to return options text too { stats: {...}, options: [{id, text}, ...] }
+        // Option B (Simpler for now): Get stats, then re-use existing poll data from frontend if possible
+        const pollInfo = await apiGetPollInfo(currentGroupId, pollId); // Returns { stats: {optId: count} }
+
+        // We need the option text. Find the original poll data rendered on the page
+        // NOTE: This relies on the poll data being present in the DOM. A more robust
+        // way might be to fetch full poll details again or have apiGetPollInfo return text.
+        const optionsData = [];
+        pollItemElement.querySelectorAll('.poll-option-btn').forEach(btn => {
+             // Extract text before the vote count parenthesis
+             const fullText = btn.querySelector('.poll-option-text-overlay')?.textContent || '';
+             const textMatch = fullText.match(/^(.*)\s\(\d+\)$/); // Match text before " (count)"
+             optionsData.push({
+                 id: btn.dataset.optionId,
+                 text: textMatch ? textMatch[1] : fullText // Extract text part
+             });
+        });
+
+
+        if (!pollInfo || !pollInfo.stats) {
+             throw new Error("Received invalid data from API.");
+        }
+
+        let statsHTML = '<p>No votes recorded yet.</p>';
+        const voteStats = pollInfo.stats;
+        const totalVotes = Object.values(voteStats).reduce((sum, count) => sum + count, 0);
+
+        if (totalVotes > 0) {
+            statsHTML = '<ul class="poll-stats-list">'; // Use a list for stats
+            optionsData.forEach(option => {
+                const count = voteStats[option.id] || 0;
+                const percentage = totalVotes > 0 ? ((count / totalVotes) * 100).toFixed(1) : 0;
+                // Simple list display: Text: Count (Percentage%)
+                statsHTML += `<li>${option.text || 'Unknown Option'}: ${count} vote(s) (${percentage}%)</li>`;
+                // Optional: Add a visual bar here too if desired
+                // statsHTML += `<div class="stat-bar" style="width: ${percentage}%;"></div>`;
+            });
+            statsHTML += `<li><strong>Total Votes: ${totalVotes}</strong></li>`;
+            statsHTML += '</ul>';
+             // Add CSS for .poll-stats-list and potentially .stat-bar
+        }
+
+        // Construct the final modal content
+        const infoContentHTML = `
+            <h2 style="word-wrap: break-word;">Info: ${pollTitle}</h2>
+            <h4>Results</h4>
+            ${statsHTML}
+            <div class="modal-actions" style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+                 <!-- Delete Button (use caution icon or red color) -->
+                 <button id="delete-poll-btn" data-poll-id="${pollId}" data-poll-title="${encodeURIComponent(pollTitle)}" class="ios-button-text" style="color: var(--ios-red);">
+                      🗑️ Delete Poll
+                 </button>
+                 <!-- Close Button -->
+                 <button id="close-info-btn" class="ios-button-primary">Close</button>
+            </div>
+        `;
+
+        // Update the modal content (re-call showModal)
+        showModal(infoContentHTML);
+
+        // Add listeners for the new buttons inside the modal
+        const closeButton = document.getElementById('close-info-btn');
+        if (closeButton) closeButton.addEventListener('click', hideModal);
+
+        const deleteButton = document.getElementById('delete-poll-btn');
+        if (deleteButton) {
+             deleteButton.addEventListener('click', handleDeletePollClick); // Call separate handler
+        } else {
+             console.error("Could not find delete button in modal.");
+        }
+
+    } catch (error) {
+         hideModal(); // Hide the loading modal on error
+         alert(`Failed to load poll info: ${error.message}`);
+         console.error("Poll info error:", error);
+    }
+}
+
+
+async function handleDeletePollClick(event) {
+    const pollId = event.currentTarget.dataset.pollId;
+    const encodedTitle = event.currentTarget.dataset.pollTitle; // Get encoded title
+    const pollTitle = decodeURIComponent(encodedTitle || `Poll ID ${pollId}`); // Decode for display
+
+    console.log(`Delete button clicked for Poll ID: ${pollId}, Title: "${pollTitle}"`);
+
+    // --- Confirmation Dialog ---
+    // Use a simple confirm() for now, could be replaced with a custom modal later
+    if (!confirm(`Are you sure you want to permanently delete the poll "${pollTitle}"? This cannot be undone.`)) {
+        console.log("Poll deletion cancelled by user.");
+        return; // User cancelled
+    }
+
+    // --- Proceed with Deletion ---
+    console.log(`Proceeding with deletion for poll ${pollId}...`);
+    // Optionally show a loading state within the modal
+    event.currentTarget.disabled = true;
+    event.currentTarget.textContent = 'Deleting...';
+
+    try {
+        const result = await apiDeletePoll(currentGroupId, pollId); // Assumes apiDeletePoll exists
+
+        if (result && result.success) {
+            alert(`Poll "${pollTitle}" deleted successfully.`);
+            hideModal(); // Close the info modal
+            // Refresh the main poll list to remove the deleted poll
+            fetchAndRenderPolls(currentGroupId); // Assumes this function exists
+        } else {
+            throw new Error(result.message || "Backend reported failure but no specific error.");
+        }
+    } catch (error) {
+        console.error(`Failed to delete poll ${pollId}:`, error);
+        alert(`Failed to delete poll: ${error.message}`);
+        // Re-enable button if deletion failed
+        event.currentTarget.disabled = false;
+        event.currentTarget.textContent = '🗑️ Delete Poll';
+    }
 }
 
 function addPollOptionInput() {

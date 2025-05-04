@@ -73,7 +73,7 @@ button:disabled {
     list-style: none;
     padding: 0;
     margin: 0;
-    width: 90%;
+    width: 100%;
     /* Often lists have white background */
 }
 
@@ -88,6 +88,7 @@ button:disabled {
     width: 90%;
     /* For absolute positioning of accessories */
 }
+
 .ios-list-item:last-child {
     border-bottom: none;
 }
@@ -519,22 +520,23 @@ button:disabled {
     width: 100%;
     text-align: left;
     margin-bottom: 8px;
-    padding: 10px 15px; 
-    border: 1px solid var(--ios-mid-gray); 
+    padding: 10px 15px;
+    border: 1px solid var(--ios-mid-gray);
     border-radius: 8px;
     color: #000;
     font-size: 16px;
-    position: relative; 
-    overflow: hidden; 
+    position: relative;
+    overflow: hidden;
     cursor: pointer;
-    transition: border-color 0.2s ease; 
+    transition: border-color 0.2s ease;
+}
 
 .poll-options button.poll-option-btn:hover {
     border-color: var(--ios-blue);
 }
 
 .poll-options button.poll-option-btn.selected {
-    border-color: var(--ios-blue); 
+    border-color: var(--ios-blue);
     font-weight: 500;
     background-color: var(--ios-blue);
     color: white;
@@ -542,9 +544,9 @@ button:disabled {
 
 .poll-option-text-overlay {
     position: relative;
-    z-index: 2; 
-    display: block; 
-    color: #000; 
+    z-index: 2;
+    display: block;
+    color: #000;
 }
 
 .checkmark-overlay {
@@ -553,7 +555,7 @@ button:disabled {
     top: 50%;
     transform: translateY(-50%);
     font-size: 18px;
-    color: var(--ios-blue); 
+    color: var(--ios-blue);
     z-index: 3;
 }
 
@@ -576,20 +578,35 @@ button:disabled {
 }
 
 .poll-actions button.info-button img {
-    width: 5px;
-    height: 5px;
+    width: 25px;
+    height: 25px;
 }
 
-.fab-add-poll {
+.poll-stats-list {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0;
+}
+
+.poll-stats-list li {
+    margin-bottom: 5px;
+    font-size: 15px;
+}
+
+.poll-stats-list li strong {
+    font-weight: 600;
+}
+
+.fab-add {
     position: fixed;
     /* Relative to viewport or container */
-    bottom: 20px;
+    bottom: 30px;
     right: 20px;
     /* Adjust right based on #app-container margin: calc(50% - 300px + 20px); if max-width is set */
     background-color: var(--ios-blue);
     color: white;
     width: 56px;
-    height: 56px;
+    height: 70px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -603,9 +620,39 @@ button:disabled {
     /* Ensure it's above other content */
 }
 
-.fab-add-poll img {
-    width: 24px;
-    height: 24px;
+.fab-add img {
+    width: 40px;
+    height: 40px;
+
+    display: block;
+    /* Center image horizontally and vertically*/
+    margin: 0 auto;
+    /* Center image horizontally */
+    transform: translateY(-7px);
+    /* Adjust vertical position */
+
+}
+
+#fab-add-btn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    bottom: 0px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    height: 40px;
+    border-radius: 12px;
+    background-color: #007aff;
+    color: white;
+    font-weight: bold;
+    box-shadow: none;
+    z-index: 10;
+    border: none;
+    cursor: pointer;
+    margin-bottom: 14px;
+    text-transform: uppercase;
 }
 
 /* --- Activities Specific --- */

@@ -540,7 +540,3 @@ function redirectToLogin() {
     // If hash change doesn't reliably trigger router quickly enough, call renderLoginScreen directly:
     // renderLoginScreen();
 }
-
-// Ensure showLoading/hideLoading/showModal/hideModal are defined (e.g., in script.js or a utils.js)
-// Make sure api.js defines apiVerifyGoogleToken, apiGetGroups, apiJoinGroup, apiCreateGroup etc.
-// Make sure script.js defines router(), stopChatPolling() and calls initializeApp() on load.
